@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#002856">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
+  <title>Convocazione Varesina</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      background: white;
+      padding: 25px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"], input[type="time"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .row input {
+      flex: 1;
+    }
+    button {
+      background-color: #002856;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Convocazione Varesina Femminile</h2>
+
+    <label>Giorno:</label>
+    <input type="text" id="giorno">
+
+    <label>Data:</label>
+    <input type="text" id="data">
+
+    <label>Luogo Ritrovo:</label>
+    <input type="text" id="luogo">
+
+    <label>Orario Ritrovo:</label>
+    <input type="time" id="orario">
+
+    <label>Partita:</label>
+    <input type="text" id="partita">
+
+    <label>Categoria:</label>
+    <input type="text" id="categoria">
+
+    <label>Allenatore:</label>
+    <input type="text" id="allenatore">
+
+    <h4>Giocatrici (20 righe):</h4>
+    <div id="giocatrici-container"></div>
+
+    <label>Nome file (senza .pdf):</label>
+    <input type="text" id="nomefile" placeholder="es: convocazione_31luglio">
+
+    <button onclick="generaPDF()">Genera PDF con Carta Intestata</button>
+  </div>
+
+  <script>
+    const container = document.getElementById("giocatrici-container");
+    for (let i = 0; i < 20; i++) {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <input type="text" placeholder="Cognome" class="cognome">
+        <input type="text" placeholder="Nome" class="nome">
+      `;
+      container.appendChild(row);
+    }
+
+    async function generaPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+      const sfondoBase64 = "data:image/jpeg;base64,REPLACE_WITH_YOUR_IMAGE_BASE64";
+      const img = new Image();
+      img.src = sfondoBase64;
+
+      img.onload = () => {
+        pdf.addImage(img, 'JPEG', 0, 0, width, height);
+
+        let y = 60;
+        pdf.setFontSize(14);
+        pdf.text("Convocazione Varesina Femminile", width / 2, y, { align: "center" });
+
+        y += 10;
+        pdf.setFontSize(12);
+        pdf.text(`Ritrovo: ${document.getElementById("giorno").value}, ${document.getElementById("data").value} - ${document.getElementById("luogo").value} alle ${document.getElementById("orario").value}`, 20, y);
+        y += 8;
+        pdf.text(`Partita: ${document.getElementById("partita").value}`, 20, y);
+        y += 8;
+        pdf.text(`Categoria: ${document.getElementById("categoria").value}`, 20, y);
+        y += 8;
+        pdf.text(`Allenatore: ${document.getElementById("allenatore").value}`, 20, y);
+        y += 10;
+        pdf.text("Convocate:", 20, y);
+        y += 6;
+
+        const cognomi = document.querySelectorAll(".cognome");
+        const nomi = document.querySelectorAll(".nome");
+        for (let i = 0; i < 20; i++) {
+          const cognome = cognomi[i].value.trim();
+          const nome = nomi[i].value.trim();
+          if (cognome || nome) {
+            pdf.text(`- ${cognome} ${nome}`, 25, y);
+            y += 7;
+          }
+        }
+
+        const nomeFile = document.getElementById("nomefile").value.trim() || "convocazione_varesina";
+        pdf.save(nomeFile + ".pdf");
+      };
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
